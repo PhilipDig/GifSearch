@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GIF Search</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
+        crossorigin="anonymous">
+</head>
+
+<body>
+
+    <h1 class="display-3 text-center">GIF Explorer</h1>
+
+    <h4>Trending GIF topics:</h4>
+
+    <div id="trendingButtons"></div>
+
+    <h4>Your favorite GIF topics:</h4>
+
+    <div id="favoriteButtons"></div>
+
+    <form>
+        <div class="form-group">
+            <label for="addGifTag">Add a new favorite GIF topic:</label>
+            <input type="email" class="form-control" id="addGifTag">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+    <div id="displayedGIFs"></div>
+
+    <!-- Get jQuery -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+
+    <!-- Run my script -->
+    <script>
+
+        //Api key qQTSneMABDp0TnSFY1GRlDzUoivH4fa5
+
+        let trendingGifTitles = []
+
+        // Scrape titles from 10 trending gif titles for topics, exclude "GIF by ..." string
+        $.ajax({
+            url: "https://api.giphy.com/v1/gifs/trending?api_key=qQTSneMABDp0TnSFY1GRlDzUoivH4fa5&limit=10&rating=PG-13",
+            method: "GET"
+        }).then(function (response) {
+
+            // If response status is successful
+            if (response.meta.status == 200) {
+
+                response.data.forEach(function (gifObject) {
+
+                    let title = gifObject.title
+
+                    // Remove boiler plate from title and add it to array for button labels
+                    let boilerPlateIndex = title.search("GIF")
+
+                    // If title does not contain GIF, the whole title with by shown
+                    if (boilerPlateIndex != -1) {
+
+                        title = title.slice(0, boilerPlateIndex).trim()
+                    }
+
+                    // Add title to topic array
+                    trendingGifTitles.push(title)
+                })
+
+                // Populate trending GIF topic buttons
+                trendingGifTitles.forEach(function (gifTitle) {
+                    $("#trendingButtons").append($(`<button value="${gifTitle}" class="gifButton">${gifTitle}</button>`))
+                })
+
+            } else {
+                alert("Trending GIF topic search failed: " + response.meta.message)
+            }
+        });
+
+        // Display 10 GIFs with the selected topic when user clicks the button
+        $(document.body).on("click", ".gifButton", function () {
+
+            $.ajax({
+                url: `https://api.giphy.com/v1/gifs/search?api_key=qQTSneMABDp0TnSFY1GRlDzUoivH4fa5&q=${this.value}&limit=10&offset=0&rating=PG-13&lang=en`,
+                method: "GET"
+            }).then(function (response) {
+
+                if (response.meta.status == 200) {
+
+                    // Clear any previously displayed GIFS
+                    $("#displayedGIFs").empty()
+
+                    response.data.forEach(function (gifObject) {
+
+                        // Append results to displayed GIFS
+                        $("#displayedGIFs").append($(`<img src=${gifObject.images.fixed_height.url} alt=${gifObject.title}>`))
+                    })
+
+                } else {
+                    alert("Gif search failed: " + response.meta.message)
+                }
+            })
+        })
+
+
+    </script>
+</body>
+
+</html>
