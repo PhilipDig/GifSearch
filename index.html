@@ -9,42 +9,73 @@
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
         crossorigin="anonymous">
+
+    <!-- Apply bootswatch theme -->
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+
+    <!-- Apply my CSS -->
+    <link rel="stylesheet" href="./assets/css/style.css">
 </head>
 
 <body>
 
-    <h1 class="display-3 text-center">GIF Explorer</h1>
+    <section>
+        <div class="row">
+            <div class="col-sm-12 col-md-4">
+                <h4>Trending GIF topics:</h4>
 
-    <h4>Trending GIF topics:</h4>
+                <div id="trendingButtons" class="btn-group-toggle" data-toggle="buttons"></div>
 
-    <div id="trendingButtons"></div>
+                <!-- TODO BONUS idea if have extra time 
+                    <h4 style="margin-top: 15px">Your favorite GIF topics:</h4>
 
-    <h4>Your favorite GIF topics:</h4>
+                <div id="favoriteButtons" class="btn-group-toggle" data-toggle="buttons"></div> -->
 
-    <div id="favoriteButtons"></div>
-
-    <form>
-        <div class="form-group">
-            <label for="addGifTag">Add a new favorite GIF topic:</label>
-            <input type="email" class="form-control" id="addGifTag">
+                <form>
+                    <div class="form-group addGifTopic">
+                        <label for="addGifTag">Add a new GIF topic:</label>
+                        <input type="text" class="form-control" id="addGifTopic">
+                    </div>
+                    <button type="submit" class="btn btn-info submitButton">Submit</button>
+                </form>
+            </div>
+            <div class="col-sm-12 col-md-8" id="displayedGIFs">
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+    </section>
 
-    <div id="displayedGIFs"></div>
+
+
 
     <!-- Get jQuery -->
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
 
+    <!-- Get Bootstrap -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
+        crossorigin="anonymous"></script>
+
     <!-- Run my script -->
     <script>
 
-        //Api key qQTSneMABDp0TnSFY1GRlDzUoivH4fa5
+        // Scrape topics from 10 trending gif titles for topics, exclude "GIF by ..." string
+        // NOTE: initial 10 topics are just placeholders if the proceeding trending request fails
+        let topics = ["sports", "emoji", "meme", "action", "sticker", "fail", "sleep", "smile", "dance", "gift"]
 
-        let trendingGifTitles = []
+        // Function to redraw topics from array
+        function displayTopicButtons() {
 
-        // Scrape titles from 10 trending gif titles for topics, exclude "GIF by ..." string
+            $("#trendingButtons").empty()
+
+            topics.forEach(function (gifTitle) {
+                $("#trendingButtons").append($(`<label class="btn btn-primary gifButton" value="${gifTitle}"><input type="radio" autocomplete="off">${gifTitle}</label>`))
+            })
+        }
+
+        displayTopicButtons()
+
         $.ajax({
             url: "https://api.giphy.com/v1/gifs/trending?api_key=qQTSneMABDp0TnSFY1GRlDzUoivH4fa5&limit=10&rating=PG-13",
             method: "GET"
@@ -52,6 +83,9 @@
 
             // If response status is successful
             if (response.meta.status == 200) {
+
+                // remove intial topics
+                topics = []
 
                 response.data.forEach(function (gifObject) {
 
@@ -67,13 +101,11 @@
                     }
 
                     // Add title to topic array
-                    trendingGifTitles.push(title)
+                    topics.push(title)
                 })
 
                 // Populate trending GIF topic buttons
-                trendingGifTitles.forEach(function (gifTitle) {
-                    $("#trendingButtons").append($(`<button value="${gifTitle}" class="gifButton">${gifTitle}</button>`))
-                })
+                displayTopicButtons()
 
             } else {
                 alert("Trending GIF topic search failed: " + response.meta.message)
@@ -84,7 +116,7 @@
         $(document.body).on("click", ".gifButton", function () {
 
             $.ajax({
-                url: `https://api.giphy.com/v1/gifs/search?api_key=qQTSneMABDp0TnSFY1GRlDzUoivH4fa5&q=${this.value}&limit=10&offset=0&rating=PG-13&lang=en`,
+                url: `https://api.giphy.com/v1/gifs/search?api_key=qQTSneMABDp0TnSFY1GRlDzUoivH4fa5&q=${this.getAttribute("value")}&limit=10&offset=0&rating=PG-13&lang=en`,
                 method: "GET"
             }).then(function (response) {
 
@@ -95,14 +127,46 @@
 
                     response.data.forEach(function (gifObject) {
 
-                        // Append results to displayed GIFS
-                        $("#displayedGIFs").append($(`<img src=${gifObject.images.fixed_height.url} alt=${gifObject.title}>`))
+                        // Append results to displayed GIFS with still images shown by default
+                        let stillUrl = gifObject.images.fixed_height_still.url
+                        let animateUrl = gifObject.images.fixed_height.url
+                        $("#displayedGIFs").append($(`<div class="gifDiv"><img src=${stillUrl} data-state="still" data-animate=${animateUrl} data-still=${stillUrl} alt=${gifObject.title} class="gif"><p>${gifObject.rating}</p></div>`))
                     })
 
                 } else {
                     alert("Gif search failed: " + response.meta.message)
                 }
             })
+        })
+
+        // Grabbed this code from the pausing GIFs activity ;)
+        $(document.body).on("click", ".gif", function () {
+            // The attr jQuery method allows us to get or set the value of any attribute on our HTML element
+            var state = $(this).attr("data-state");
+            // If the clicked image's state is still, update its src attribute to what its data-animate value is.
+            // Then, set the image's data-state to animate
+            // Else set src to the data-still value
+            if (state === "still") {
+                $(this).attr("src", $(this).attr("data-animate"));
+                $(this).attr("data-state", "animate");
+            } else {
+                $(this).attr("src", $(this).attr("data-still"));
+                $(this).attr("data-state", "still");
+            }
+        });
+
+        // Handler to add a new topic
+        $(document.body).on("click", ".submitButton", function (event) {
+
+            event.preventDefault()
+
+            let topic = $("#addGifTopic").val()
+            // Make sure submission is not empty or already in array to prevent duplicate buttons
+            if (topic && !topics.includes(topic)) {
+
+                topics.push(topic)
+                displayTopicButtons()
+            }
         })
 
 
