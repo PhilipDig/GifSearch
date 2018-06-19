@@ -5,6 +5,7 @@
 
 img {
     margin-right: 15px;
+    max-width: 100%;
 }
 
 .row {
@@ -19,7 +20,7 @@ form {
 
 .gifDiv {
 
-    float: left
+    float: left;
 }
 
 body {

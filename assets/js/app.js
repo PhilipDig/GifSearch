@@ -74,7 +74,7 @@ $(document.body).on("click", ".gifButton", function () {
                 // Append results to displayed GIFS with still images shown by default
                 let stillUrl = gifObject.images.fixed_height_still.url
                 let animateUrl = gifObject.images.fixed_height.url
-                $("#displayedGIFs").append($(`<div class="gifDiv"><img src=${stillUrl} data-state="still" data-animate=${animateUrl} data-still=${stillUrl} alt=${gifObject.title} class="gif"><p>${gifObject.rating}</p></div>`))
+                $("#displayedGIFs").append($(`<div class="gifDiv col-sm-12"><img src=${stillUrl} data-state="still" data-animate=${animateUrl} data-still=${stillUrl} alt=${gifObject.title} class="gif"><p>${gifObject.rating}</p></div>`))
             })
 
         } else {
