@@ -1,6 +1,7 @@
 // Scrape topics from 10 trending gif titles for topics, exclude "GIF by ..." string
 // NOTE: initial 10 topics are just placeholders if the proceeding trending request fails
-let topics = ["sports", "emoji", "meme", "action", "sticker", "fail", "sleep", "smile", "dance", "gift"]
+let defaultTopics = ["sports", "emoji", "meme", "action", "sticker", "fail", "sleep", "smile", "dance", "gift"]
+let topics = defaultTopics
 
 // Function to redraw topics from array
 function displayTopicButtons() {
@@ -22,10 +23,10 @@ $.ajax({
     // If response status is successful
     if (response.meta.status == 200) {
 
-        // remove intial topics
+        // Remove default topics
         topics = []
 
-        response.data.forEach(function (gifObject) {
+        response.data.forEach(function (gifObject, index) {
 
             let title = gifObject.title
 
@@ -38,8 +39,13 @@ $.ajax({
                 title = title.slice(0, boilerPlateIndex).trim()
             }
 
-            // Add title to topic array
-            topics.push(title)
+            // Add title to topic array, use default if trending GIF did not have a title
+            if (title != "") {
+                topics.push(title)
+            } else {
+                topics.push(defaultTopics[index])
+            }
+
         })
 
         // Populate trending GIF topic buttons
